@@ -1,0 +1,10 @@
+.git
+.env
+data/raw/*.csv
+olap/csv/*
+olap/graficos/*
+docs/*.pdf
+__pycache__/
+*.pyc
+.venv/
+venv/
