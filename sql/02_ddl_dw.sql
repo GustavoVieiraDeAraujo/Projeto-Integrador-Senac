@@ -153,3 +153,52 @@ CREATE TABLE dw.dim_status (
     ordem_ciclo       SMALLINT    NOT NULL
 );
 COMMENT ON TABLE dw.dim_status IS 'Dimensao status do pedido, com descricao em portugues e flags.';
+
+CREATE TABLE dw.fato_vendas (
+    sk_tempo            INTEGER       NOT NULL REFERENCES dw.dim_tempo (sk_tempo),
+    sk_cliente          INTEGER       NOT NULL REFERENCES dw.dim_cliente (sk_cliente),
+    sk_produto          INTEGER       NOT NULL REFERENCES dw.dim_produto (sk_produto),
+    sk_vendedor         INTEGER       NOT NULL REFERENCES dw.dim_vendedor (sk_vendedor),
+    sk_geografia        INTEGER       NOT NULL REFERENCES dw.dim_geografia (sk_geografia),
+    sk_pagamento        INTEGER       NOT NULL REFERENCES dw.dim_pagamento (sk_pagamento),
+    sk_status           INTEGER       NOT NULL REFERENCES dw.dim_status (sk_status),
+    order_id            CHAR(32)      NOT NULL,
+    order_item_id       SMALLINT      NOT NULL,
+    valor_item          NUMERIC(10,2) NOT NULL,
+    valor_frete         NUMERIC(10,2) NOT NULL,
+    valor_total_item    NUMERIC(10,2) NOT NULL,
+    prazo_entrega_dias  SMALLINT,
+    atraso_entrega_dias SMALLINT,
+    nota_avaliacao      SMALLINT,
+    CONSTRAINT pk_fato_vendas PRIMARY KEY (order_id, order_item_id)
+);
+COMMENT ON TABLE dw.fato_vendas IS 'Fato de vendas no grao de item de pedido (esquema estrela principal).';
+COMMENT ON COLUMN dw.fato_vendas.prazo_entrega_dias IS 'Dias entre a compra e a entrega ao cliente (replicado do pedido).';
+COMMENT ON COLUMN dw.fato_vendas.atraso_entrega_dias IS 'Dias entre a entrega real e a estimada. Positivo = atraso (replicado do pedido).';
+
+CREATE TABLE dw.fato_pedido (
+    order_id                    CHAR(32)      PRIMARY KEY,
+    sk_tempo_compra             INTEGER       NOT NULL REFERENCES dw.dim_tempo (sk_tempo),
+    sk_tempo_aprovacao          INTEGER       REFERENCES dw.dim_tempo (sk_tempo),
+    sk_tempo_entrega            INTEGER       REFERENCES dw.dim_tempo (sk_tempo),
+    sk_tempo_estimada           INTEGER       NOT NULL REFERENCES dw.dim_tempo (sk_tempo),
+    sk_cliente                  INTEGER       NOT NULL REFERENCES dw.dim_cliente (sk_cliente),
+    sk_geografia                INTEGER       NOT NULL REFERENCES dw.dim_geografia (sk_geografia),
+    sk_pagamento                INTEGER       NOT NULL REFERENCES dw.dim_pagamento (sk_pagamento),
+    sk_status                   INTEGER       NOT NULL REFERENCES dw.dim_status (sk_status),
+    qtd_itens                   SMALLINT      NOT NULL,
+    qtd_produtos_distintos      SMALLINT      NOT NULL,
+    qtd_vendedores              SMALLINT      NOT NULL,
+    valor_itens                 NUMERIC(10,2) NOT NULL,
+    valor_frete                 NUMERIC(10,2) NOT NULL,
+    valor_total                 NUMERIC(10,2) NOT NULL,
+    valor_pago                  NUMERIC(10,2),
+    qtd_pagamentos              SMALLINT      NOT NULL,
+    participacao_frete          NUMERIC(6,4),
+    prazo_entrega_dias          SMALLINT,
+    prazo_estimado_dias         SMALLINT      NOT NULL,
+    atraso_entrega_dias         SMALLINT,
+    flag_entregue_com_atraso    BOOLEAN,
+    nota_avaliacao              SMALLINT
+);
+COMMENT ON TABLE dw.fato_pedido IS 'Fato complementar no grao de pedido (logistica, pagamento e satisfacao).';
