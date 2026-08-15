@@ -202,3 +202,22 @@ CREATE TABLE dw.fato_pedido (
     nota_avaliacao              SMALLINT
 );
 COMMENT ON TABLE dw.fato_pedido IS 'Fato complementar no grao de pedido (logistica, pagamento e satisfacao).';
+
+CREATE INDEX ix_fv_tempo      ON dw.fato_vendas (sk_tempo);
+CREATE INDEX ix_fv_cliente    ON dw.fato_vendas (sk_cliente);
+CREATE INDEX ix_fv_produto    ON dw.fato_vendas (sk_produto);
+CREATE INDEX ix_fv_vendedor   ON dw.fato_vendas (sk_vendedor);
+CREATE INDEX ix_fv_geografia  ON dw.fato_vendas (sk_geografia);
+CREATE INDEX ix_fv_pagamento  ON dw.fato_vendas (sk_pagamento);
+CREATE INDEX ix_fv_status     ON dw.fato_vendas (sk_status);
+
+CREATE INDEX ix_fp_tempo_compra ON dw.fato_pedido (sk_tempo_compra);
+CREATE INDEX ix_fp_cliente      ON dw.fato_pedido (sk_cliente);
+CREATE INDEX ix_fp_geografia    ON dw.fato_pedido (sk_geografia);
+CREATE INDEX ix_fp_pagamento    ON dw.fato_pedido (sk_pagamento);
+CREATE INDEX ix_fp_status       ON dw.fato_pedido (sk_status);
+
+CREATE INDEX ix_dt_ano_mes        ON dw.dim_tempo (ano, mes);
+CREATE INDEX ix_dp_categoria      ON dw.dim_produto (categoria);
+CREATE INDEX ix_dg_estado         ON dw.dim_geografia (estado);
+CREATE INDEX ix_dv_estado         ON dw.dim_vendedor (estado);
