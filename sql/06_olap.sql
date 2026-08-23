@@ -106,3 +106,81 @@ SELECT p.tipo_pagamento,
  GROUP BY p.tipo_pagamento
  ORDER BY fat_total DESC;
 
+-- >>> O07 | Ranking | Dez vendedores com maior faturamento
+WITH vendedores AS (
+    SELECT v.seller_id,
+           v.cidade,
+           v.estado,
+           SUM(f.valor_item)          AS faturamento,
+           COUNT(DISTINCT f.order_id) AS pedidos,
+           COUNT(*)                   AS itens
+      FROM dw.fato_vendas   f
+      JOIN dw.dim_vendedor  v ON v.sk_vendedor = f.sk_vendedor
+      JOIN dw.dim_status    s ON s.sk_status   = f.sk_status
+     WHERE s.flag_cancelado = FALSE
+     GROUP BY v.seller_id, v.cidade, v.estado
+)
+SELECT RANK() OVER (ORDER BY faturamento DESC)                                  AS posicao,
+       seller_id,
+       cidade,
+       estado,
+       faturamento,
+       pedidos,
+       itens,
+       ROUND(faturamento / pedidos, 2)                                         AS ticket_medio,
+       ROUND(100.0 * faturamento / SUM(faturamento) OVER (), 2)                AS participacao_pct,
+       ROUND(100.0 * SUM(faturamento) OVER (ORDER BY faturamento DESC)
+             / SUM(faturamento) OVER (), 2)                                    AS participacao_acumulada_pct
+  FROM vendedores
+ ORDER BY faturamento DESC
+ LIMIT 10;
+
+-- >>> O08 | Drill-down | Prazo médio de entrega e taxa de atraso por região e estado
+SELECT CASE WHEN GROUPING(g.regiao) = 1 THEN 'Total geral' ELSE g.regiao END AS regiao,
+       CASE WHEN GROUPING(g.estado) = 1 THEN '(subtotal)' ELSE g.estado END  AS estado,
+       COUNT(*)                                                                AS pedidos_entregues,
+       ROUND(AVG(f.prazo_entrega_dias), 1)                                     AS prazo_medio_dias,
+       ROUND(AVG(f.prazo_estimado_dias), 1)                                    AS prazo_estimado_medio_dias,
+       ROUND(AVG(f.atraso_entrega_dias), 1)                                    AS desvio_medio_vs_estimado_dias,
+       ROUND(100.0 * COUNT(*) FILTER (WHERE f.flag_entregue_com_atraso) / COUNT(*), 2) AS taxa_atraso_pct
+  FROM dw.fato_pedido   f
+  JOIN dw.dim_geografia g ON g.sk_geografia = f.sk_geografia
+ WHERE f.prazo_entrega_dias IS NOT NULL
+ GROUP BY ROLLUP (g.regiao, g.estado)
+ ORDER BY GROUPING(g.regiao), g.regiao, GROUPING(g.estado), prazo_medio_dias DESC;
+
+-- >>> O09 | Ranking | Vendedores com maior taxa de atraso (mínimo de 200 pedidos entregues)
+WITH pedidos_vendedor AS (
+    SELECT DISTINCT f.order_id, f.sk_vendedor, f.prazo_entrega_dias, f.atraso_entrega_dias
+      FROM dw.fato_vendas f
+     WHERE f.prazo_entrega_dias IS NOT NULL
+)
+SELECT v.seller_id,
+       v.cidade,
+       v.estado,
+       COUNT(*)                                                               AS pedidos_entregues,
+       ROUND(AVG(pv.prazo_entrega_dias), 1)                                   AS prazo_medio_dias,
+       ROUND(100.0 * COUNT(*) FILTER (WHERE pv.atraso_entrega_dias > 0) / COUNT(*), 2) AS taxa_atraso_pct
+  FROM pedidos_vendedor pv
+  JOIN dw.dim_vendedor  v ON v.sk_vendedor = pv.sk_vendedor
+ GROUP BY v.seller_id, v.cidade, v.estado
+HAVING COUNT(*) >= 200
+ ORDER BY taxa_atraso_pct DESC, pedidos_entregues DESC
+ LIMIT 10;
+
+-- >>> O10 | Slice | Participação do frete no valor do pedido por categoria (dez maiores)
+SELECT p.categoria,
+       COUNT(*)                                                                AS itens,
+       SUM(f.valor_item)                                                       AS valor_itens,
+       SUM(f.valor_frete)                                                      AS valor_frete,
+       ROUND(100.0 * SUM(f.valor_frete) / SUM(f.valor_total_item), 2)         AS participacao_frete_pct,
+       ROUND(AVG(f.valor_frete), 2)                                            AS frete_medio_por_item
+  FROM dw.fato_vendas f
+  JOIN dw.dim_produto p ON p.sk_produto = f.sk_produto
+  JOIN dw.dim_status  s ON s.sk_status  = f.sk_status
+ WHERE s.flag_cancelado = FALSE
+ GROUP BY p.categoria
+HAVING COUNT(*) >= 500
+ ORDER BY participacao_frete_pct DESC
+ LIMIT 10;
+
