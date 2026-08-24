@@ -184,3 +184,56 @@ HAVING COUNT(*) >= 500
  ORDER BY participacao_frete_pct DESC
  LIMIT 10;
 
+-- >>> O11 | Drill-across | Nota média de avaliação por situação da entrega
+SELECT CASE WHEN f.prazo_entrega_dias IS NULL  THEN '6. Não entregue'
+            WHEN f.atraso_entrega_dias < 0     THEN '1. Entregue antes da data estimada'
+            WHEN f.atraso_entrega_dias = 0     THEN '2. Entregue na data estimada'
+            WHEN f.atraso_entrega_dias <= 7    THEN '3. Atraso de 1 a 7 dias'
+            WHEN f.atraso_entrega_dias <= 15   THEN '4. Atraso de 8 a 15 dias'
+            ELSE                                    '5. Atraso acima de 15 dias' END AS situacao_entrega,
+       COUNT(*)                                                                 AS pedidos,
+       COUNT(f.nota_avaliacao)                                                  AS pedidos_avaliados,
+       ROUND(AVG(f.nota_avaliacao), 2)                                          AS nota_media,
+       ROUND(100.0 * COUNT(*) FILTER (WHERE f.nota_avaliacao <= 2) / NULLIF(COUNT(f.nota_avaliacao), 0), 2) AS pct_notas_1_e_2,
+       ROUND(100.0 * COUNT(*) FILTER (WHERE f.nota_avaliacao = 5)  / NULLIF(COUNT(f.nota_avaliacao), 0), 2) AS pct_nota_5
+  FROM dw.fato_pedido f
+ GROUP BY 1
+ ORDER BY 1;
+
+-- >>> O12 | Ranking | Categorias com as melhores e as piores avaliações (mínimo de 300 avaliações)
+WITH categorias AS (
+    SELECT p.categoria,
+           COUNT(f.nota_avaliacao)             AS avaliacoes,
+           ROUND(AVG(f.nota_avaliacao), 2)     AS nota_media,
+           ROUND(100.0 * COUNT(*) FILTER (WHERE f.nota_avaliacao <= 2) / COUNT(f.nota_avaliacao), 2) AS pct_notas_1_e_2
+      FROM dw.fato_vendas f
+      JOIN dw.dim_produto p ON p.sk_produto = f.sk_produto
+     WHERE f.nota_avaliacao IS NOT NULL
+     GROUP BY p.categoria
+    HAVING COUNT(f.nota_avaliacao) >= 300
+),
+ranqueadas AS (
+    SELECT c.*,
+           RANK() OVER (ORDER BY nota_media DESC, avaliacoes DESC) AS posicao_melhor,
+           RANK() OVER (ORDER BY nota_media ASC,  avaliacoes DESC) AS posicao_pior
+      FROM categorias c
+)
+SELECT CASE WHEN posicao_melhor <= 5 THEN 'Melhores' ELSE 'Piores' END AS grupo,
+       categoria,
+       avaliacoes,
+       nota_media,
+       pct_notas_1_e_2
+  FROM ranqueadas
+ WHERE posicao_melhor <= 5 OR posicao_pior <= 5
+ ORDER BY nota_media DESC, avaliacoes DESC;
+
+-- >>> O13 | Roll-up | Clientes recorrentes por região
+SELECT CASE WHEN GROUPING(regiao) = 1 THEN 'Total geral' ELSE regiao END    AS regiao,
+       COUNT(*)                                                               AS clientes,
+       COUNT(*) FILTER (WHERE flag_recorrente)                                AS clientes_recorrentes,
+       ROUND(100.0 * COUNT(*) FILTER (WHERE flag_recorrente) / COUNT(*), 2)   AS pct_recorrentes,
+       ROUND(AVG(qtd_pedidos), 3)                                             AS pedidos_por_cliente
+  FROM dw.dim_cliente
+ GROUP BY ROLLUP (regiao)
+ ORDER BY GROUPING(regiao), pct_recorrentes DESC;
+
