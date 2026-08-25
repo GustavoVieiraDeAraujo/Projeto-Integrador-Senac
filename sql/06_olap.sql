@@ -237,3 +237,73 @@ SELECT CASE WHEN GROUPING(regiao) = 1 THEN 'Total geral' ELSE regiao END    AS r
  GROUP BY ROLLUP (regiao)
  ORDER BY GROUPING(regiao), pct_recorrentes DESC;
 
+-- >>> O14 | Slice | Taxa de cancelamento por mês
+SELECT t.ano_mes,
+       COUNT(*)                                                                AS pedidos,
+       COUNT(*) FILTER (WHERE s.flag_cancelado)                                AS pedidos_cancelados,
+       ROUND(100.0 * COUNT(*) FILTER (WHERE s.flag_cancelado) / COUNT(*), 2)   AS taxa_cancelamento_pct,
+       COUNT(*) FILTER (WHERE s.status_original = 'unavailable')               AS pedidos_indisponiveis
+  FROM dw.fato_pedido f
+  JOIN dw.dim_tempo   t ON t.sk_tempo  = f.sk_tempo_compra
+  JOIN dw.dim_status  s ON s.sk_status = f.sk_status
+ GROUP BY t.ano_mes
+ ORDER BY t.ano_mes;
+
+-- >>> O15 | Cube | Faturamento por região do cliente x tipo de pagamento com todos os subtotais
+SELECT CASE WHEN GROUPING(g.regiao) = 1         THEN 'Todas as regiões' ELSE g.regiao END          AS regiao,
+       CASE WHEN GROUPING(p.tipo_pagamento) = 1 THEN 'Todos os tipos'   ELSE p.tipo_pagamento END  AS tipo_pagamento,
+       SUM(f.valor_item)                                                                            AS faturamento,
+       COUNT(DISTINCT f.order_id)                                                                   AS pedidos
+  FROM dw.fato_vendas    f
+  JOIN dw.dim_geografia  g ON g.sk_geografia = f.sk_geografia
+  JOIN dw.dim_pagamento  p ON p.sk_pagamento = f.sk_pagamento
+  JOIN dw.dim_status     s ON s.sk_status    = f.sk_status
+ WHERE s.flag_cancelado = FALSE
+ GROUP BY CUBE (g.regiao, p.tipo_pagamento)
+ ORDER BY GROUPING(g.regiao), g.regiao, GROUPING(p.tipo_pagamento), faturamento DESC;
+
+-- >>> O16 | Pivot | Prazo médio de entrega (dias) por região do vendedor x região do cliente
+WITH pedidos AS (
+    SELECT DISTINCT f.order_id,
+           v.regiao             AS regiao_vendedor,
+           g.regiao             AS regiao_cliente,
+           f.prazo_entrega_dias
+      FROM dw.fato_vendas   f
+      JOIN dw.dim_vendedor  v ON v.sk_vendedor  = f.sk_vendedor
+      JOIN dw.dim_geografia g ON g.sk_geografia = f.sk_geografia
+     WHERE f.prazo_entrega_dias IS NOT NULL
+)
+SELECT COALESCE(regiao_vendedor, 'Todas as regiões')                                   AS regiao_vendedor,
+       COUNT(*)                                                                          AS pedidos_entregues,
+       ROUND(AVG(prazo_entrega_dias) FILTER (WHERE regiao_cliente = 'Norte'), 1)        AS para_norte,
+       ROUND(AVG(prazo_entrega_dias) FILTER (WHERE regiao_cliente = 'Nordeste'), 1)     AS para_nordeste,
+       ROUND(AVG(prazo_entrega_dias) FILTER (WHERE regiao_cliente = 'Centro-Oeste'), 1) AS para_centro_oeste,
+       ROUND(AVG(prazo_entrega_dias) FILTER (WHERE regiao_cliente = 'Sudeste'), 1)      AS para_sudeste,
+       ROUND(AVG(prazo_entrega_dias) FILTER (WHERE regiao_cliente = 'Sul'), 1)          AS para_sul,
+       ROUND(AVG(prazo_entrega_dias), 1)                                                 AS prazo_medio_geral
+  FROM pedidos
+ GROUP BY ROLLUP (regiao_vendedor)
+ ORDER BY GROUPING(regiao_vendedor), pedidos_entregues DESC;
+
+-- >>> O17 | Roll-up | Distribuição geográfica dos vendedores por estado
+WITH vendas AS (
+    SELECT f.sk_vendedor,
+           SUM(f.valor_item)          AS faturamento,
+           COUNT(DISTINCT f.order_id) AS pedidos
+      FROM dw.fato_vendas f
+      JOIN dw.dim_status  s ON s.sk_status = f.sk_status
+     WHERE s.flag_cancelado = FALSE
+     GROUP BY f.sk_vendedor
+)
+SELECT v.estado,
+       v.regiao,
+       COUNT(*)                                                                   AS vendedores,
+       ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2)                         AS pct_vendedores,
+       COALESCE(SUM(x.faturamento), 0)                                            AS faturamento,
+       ROUND(100.0 * COALESCE(SUM(x.faturamento), 0)
+             / SUM(COALESCE(SUM(x.faturamento), 0)) OVER (), 2)                    AS pct_faturamento,
+       COALESCE(SUM(x.pedidos), 0)                                                AS pedidos
+  FROM dw.dim_vendedor v
+  LEFT JOIN vendas x ON x.sk_vendedor = v.sk_vendedor
+ GROUP BY v.estado, v.regiao
+ ORDER BY vendedores DESC, faturamento DESC;
