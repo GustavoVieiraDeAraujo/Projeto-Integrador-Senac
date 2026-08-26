@@ -1,0 +1,33 @@
+regiao,tipo_pagamento,faturamento,pedidos
+Centro-Oeste,Cartão de crédito,686573.57,4274
+Centro-Oeste,Boleto,153259.95,1243
+Centro-Oeste,Voucher,15888.33,155
+Centro-Oeste,Cartão de débito,6103.24,56
+Centro-Oeste,Todos os tipos,861825.09,5728
+Nordeste,Cartão de crédito,1242909.81,7159
+Nordeste,Boleto,243667.20,1693
+Nordeste,Voucher,31913.55,316
+Nordeste,Cartão de débito,19718.72,137
+Nordeste,Todos os tipos,1538209.28,9305
+Norte,Cartão de crédito,254995.82,1330
+Norte,Boleto,68772.57,421
+Norte,Voucher,5828.10,57
+Norte,Cartão de débito,4217.79,26
+Norte,Todos os tipos,333814.28,1834
+Sudeste,Cartão de crédito,6971017.74,51232
+Sudeste,Boleto,1535776.92,12897
+Sudeste,Voucher,192022.13,2110
+Sudeste,Cartão de débito,125337.00,1101
+Sudeste,Não informado,134.97,1
+Sudeste,Todos os tipos,8824288.76,67341
+Sul,Cartão de crédito,1493854.91,10123
+Sul,Boleto,376091.07,3281
+Sul,Voucher,42591.07,399
+Sul,Cartão de débito,25733.97,194
+Sul,Todos os tipos,1938271.02,13997
+Todas as regiões,Cartão de crédito,10649351.85,74118
+Todas as regiões,Boleto,2377567.71,19535
+Todas as regiões,Voucher,288243.18,3037
+Todas as regiões,Cartão de débito,181110.72,1514
+Todas as regiões,Não informado,134.97,1
+Todas as regiões,Todos os tipos,13496408.43,98205

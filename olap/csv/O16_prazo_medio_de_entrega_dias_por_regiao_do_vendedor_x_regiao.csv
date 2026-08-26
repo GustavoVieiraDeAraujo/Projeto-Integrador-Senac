@@ -1,0 +1,7 @@
+regiao_vendedor,pedidos_entregues,para_norte,para_nordeste,para_centro_oeste,para_sudeste,para_sul,prazo_medio_geral
+Sudeste,80706,22.6,20.1,15.2,10.3,14.9,12.3
+Sul,13064,22.4,21.9,15.1,12.8,10.6,13.1
+Nordeste,1535,26.5,13.9,15.7,13.6,18.0,14.6
+Centro-Oeste,1444,19.0,19.8,8.9,11.5,15.9,12.7
+Norte,25,,43.3,,16.1,10.7,19.8
+Todas as regiões,96774,22.6,19.9,14.9,10.7,14.0,12.5

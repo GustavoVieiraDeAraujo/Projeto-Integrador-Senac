@@ -1,0 +1,9 @@
+ano,regiao,tipo_pagamento,faturamento,pedidos,ticket_medio
+2017,Sudeste,Boleto,728392.33,6005,121.30
+2017,Sudeste,Cartão de crédito,3079550.29,22484,136.97
+2017,Sul,Boleto,184947.86,1644,112.50
+2017,Sul,Cartão de crédito,673085.05,4647,144.84
+2018,Sudeste,Boleto,802325.83,6858,116.99
+2018,Sudeste,Cartão de crédito,3868056.24,28597,135.26
+2018,Sul,Boleto,190305.44,1625,117.11
+2018,Sul,Cartão de crédito,813936.84,5439,149.65

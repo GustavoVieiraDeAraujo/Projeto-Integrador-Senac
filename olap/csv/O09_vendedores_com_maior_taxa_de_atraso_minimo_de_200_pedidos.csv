@@ -1,0 +1,11 @@
+seller_id,cidade,estado,pedidos_entregues,prazo_medio_dias,taxa_atraso_pct
+06a2c3af7b3aee5d69171b0e14f0ee87,Sao Luis,MA,389,17.6,19.02
+88460e8ebdecbfecb5f9601833981930,Maringa,PR,246,17.8,17.07
+e5a3438891c0bfdb9394643f95273d8e,Limeira,SP,216,15.6,15.74
+f7ba60f8c3f99e7ee4042fdef03b70c4,Sao Bernardo do Campo,SP,218,13.3,13.76
+8160255418d5aaa7dbdc9f4c64ebda44,Ibitinga,SP,380,16.2,13.68
+855668e0971d4dfd7bef1b6a4133b41b,Itatiba,SP,300,16.2,12.67
+7aa4334be125fcdd2ba64b3180029f14,Laranjal Paulista,SP,214,15.9,11.68
+7d13fca15225358621be4086e1eb0964,Ribeirao Preto,SP,558,15.7,11.47
+c3867b4666c7d76867627c2f7fb22e21,Guara,SP,228,15.3,10.96
+897060da8b9a21f655304d50fd935913,Ribeirao Preto,SP,304,14.9,10.53

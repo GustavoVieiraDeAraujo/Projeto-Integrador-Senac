@@ -1,0 +1,7 @@
+situacao_entrega,pedidos,pedidos_avaliados,nota_media,pct_notas_1_e_2,pct_nota_5
+1. Entregue antes da data estimada,88649,88168,4.29,9.23,62.43
+2. Entregue na data estimada,1292,1280,4.03,12.42,50.63
+3. Atraso de 1 a 7 dias,3672,3600,2.71,49.39,23.89
+4. Atraso de 8 a 15 dias,1638,1602,1.67,79.96,6.68
+5. Atraso acima de 15 dias,1225,1180,1.73,78.31,7.46
+6. Não entregue,2965,2843,1.75,78.02,9.11
